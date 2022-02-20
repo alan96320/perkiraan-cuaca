@@ -47,9 +47,16 @@ $arah = [
     "VARIABLE" => "berubah-ubah",
 ];
 foreach ($dataGet as $val) {
-    $cuaca = $val->parameter[6];
+    $kelembabab = $val->parameter[1];
     $suhu = $val->parameter[5];
+    $cuaca = $val->parameter[6];
+    $arahAngin = $val->parameter[7];
+    $kecepatan = $val->parameter[8];
+
+    if ($kelembabab) $kelembabab = $kelembabab->timerange;
     if ($suhu) $suhu = $suhu->timerange;
+    if ($arahAngin) $arahAngin = $arahAngin->timerange;
+    if ($kecepatan) $kecepatan = $kecepatan->timerange;
 
     if ($cuaca) {
         $x = [];
@@ -63,6 +70,10 @@ foreach ($dataGet as $val) {
                 "cuaca" => $cuacaName[(int)$value->value],
                 "suhu" => (int)$sVal."° ".$sVal->attributes()->unit,
                 "pmAm" => $time >= '18:00' || $time < '06:00' ? 'malam' : 'siang',
+                "kelembabab" => (int)$kelembabab->value." %",
+                "arahAngin" => $arah[(string)$arahAngin->value[1]],
+                "simbolArah" => (string)$arahAngin->value[1],
+                "kecepatan" => (int)$kecepatan->value[0]." km/jam",
             ];
             $i++;
         }
@@ -84,6 +95,7 @@ foreach ($dataGet as $val) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cuaca</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <style>
         @import url('https://fonts.googleapis.com/css?family=Montserrat:400,700,900&display=swap');
         body {
@@ -148,6 +160,66 @@ foreach ($dataGet as $val) {
         .cuaca-area.bg-siang{
             background-image: url('assets/siang.jpg');
         }
+
+        .simbol-arah.N{
+            transform: rotate(135deg);
+        }
+
+        .simbol-arah.NE{
+            transform: rotate(180deg);
+        }
+
+        .simbol-arah.E{
+            transform: rotate(225deg);
+        }
+
+        .simbol-arah.SE{
+            transform: rotate(270deg);
+        }
+
+        .simbol-arah.S{
+            transform: rotate(315deg);
+        }
+
+        .simbol-arah.SW{
+            transform: rotate(0);
+        }
+
+        .simbol-arah.W{
+            transform: rotate(45deg);
+        }
+
+        .simbol-arah.NW{
+            transform: rotate(90deg);
+        }
+
+        .simbol-arah.NNE{
+            transform: rotate(225deg);
+        }
+        .simbol-arah.ESE{
+            transform: rotate(135deg);
+        }
+        
+
+        .simbol-arah.SSE{
+            transform: rotate(135deg);
+        }
+        
+        .simbol-arah.SSW{
+            transform: rotate(135deg);
+        }
+        
+        .simbol-arah.WSW{
+            transform: rotate(135deg);
+        }
+        
+        .simbol-arah.WNW{
+            transform: rotate(135deg);
+        }
+        
+        .simbol-arah.NNW{
+            transform: rotate(135deg);
+        }
     </style>
 </head>
 <body>
@@ -165,7 +237,10 @@ foreach ($dataGet as $val) {
                                             <span class="text-cuaca my-2"><?=$value['time']?></span>
                                             <img src="assets/<?=$value['cuaca']?>-<?=$value['pmAm']?>.png">
                                             <span class="text-cuaca-info my-2"><?=$value['cuaca']?></span>
-                                            <span class="text-suhu"><?=$value['suhu']?></span>
+                                            <span class="text-suhu mb-2"><i class="fa-solid fa-temperature-half"></i> <?=$value['suhu']?></span>
+                                            <span class="text-cuaca-info mb-2"><i class="fa-solid fa-droplet"></i> <?=$value['kelembabab']?></span>
+                                            <span class="text-cuaca-info mb-2"><i class="fa-solid fa-wind"></i> <?=$value['kecepatan']?></span>
+                                            <span class="text-cuaca-info mb-2"><i class="fa-solid fa-location-arrow simbol-arah <?=$value['simbolArah']?>"></i> <?=$value['arahAngin']?></span>
                                         </div>
                                     </div>
                                 </div>
@@ -182,15 +257,16 @@ foreach ($dataGet as $val) {
                     </div>
                 </div>
                 <?php 
-                    if ($i%5 == 0 && $i != 0) { ?>
+                    $x = $i+1;
+                    if ($x%5 == 0 ) { ?>
                         <div class="w-100"></div>
                     <?php }
-                ?>
-            <?php } ?>
+                }; ?>
         </div>
     </div>
 
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js" integrity="sha512-yFjZbTYRCJodnuyGlsKamNE/LlEaEAxSUDe5+u61mV8zzqJVFOH7TnULE2/PP/l5vKWpUNnF4VGVkXh3MjgLsg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </body>
 </html>
