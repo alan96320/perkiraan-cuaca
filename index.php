@@ -46,6 +46,7 @@ $arah = [
     "NNW" => "Utara-Barat Laut",
     "VARIABLE" => "berubah-ubah",
 ];
+date_default_timezone_set('Asia/Jakarta');
 foreach ($dataGet as $val) {
     $kelembabab = $val->parameter[1];
     $suhu = $val->parameter[5];
@@ -63,20 +64,24 @@ foreach ($dataGet as $val) {
         $i = 0;
         foreach ($cuaca->timerange as $value) {
             $time = date('H:i', strtotime($value->attributes()->datetime));
-            $sVal = $suhu[$i]->value[0];
-            $x[] = [
-                "date" => date('l, d F Y H:i:s', strtotime($value->attributes()->datetime))." WIB",
-                "time" => $time." WIB",
-                "cuaca" => $cuacaName[(int)$value->value],
-                "suhu" => (int)$sVal."° ".$sVal->attributes()->unit,
-                "pmAm" => $time >= '18:00' || $time < '06:00' ? 'malam' : 'siang',
-                "kelembabab" => (int)$kelembabab->value." %",
-                "arahAngin" => $arah[(string)$arahAngin->value[1]],
-                "simbolArah" => (string)$arahAngin->value[1],
-                "kecepatan" => (int)$kecepatan->value[0]." km/jam",
-            ];
-            $i++;
+            $timeNow = date('H:i', strtotime(date('H:i')." - 2 hour"));
+            if ($time < $timeNow) {
+                $sVal = $suhu[$i]->value[0];
+                $x[] = [
+                    "date" => date('l, d F Y H:i:s', strtotime($value->attributes()->datetime))." WIB",
+                    "time" => $time." WIB",
+                    "cuaca" => $cuacaName[(int)$value->value],
+                    "suhu" => (int)$sVal."° ".$sVal->attributes()->unit,
+                    "pmAm" => $time >= '18:00' || $time < '06:00' ? 'malam' : 'siang',
+                    "kelembabab" => (int)$kelembabab->value." %",
+                    "arahAngin" => $arah[(string)$arahAngin->value[1]],
+                    "simbolArah" => (string)$arahAngin->value[1],
+                    "kecepatan" => (int)$kecepatan->value[0]." km/jam",
+                ];
+                $i++;
+            }
         }
+        $x = [$x[count($x)-1]];
         $data[] = [
             "namaKota" => $val->name[1],
             "provinsi" => $val->attributes()->domain,
@@ -96,13 +101,15 @@ foreach ($dataGet as $val) {
     <title>Cuaca</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="assets/owlcarousel/owl.carousel.min.css">
+    <link rel="stylesheet" href="assets/owlcarousel/owl.theme.default.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css?family=Montserrat:400,700,900&display=swap');
         body {
             margin: 0;
             width: 100%;
             height: 100vh;
-            font-family: 'Montserrat', sans-serif;
+            font-family: 'Montserrat', sans-serif !important;
             background-color: #343d4b;
             display: -webkit-box;
             display: -ms-flexbox;
@@ -146,8 +153,8 @@ foreach ($dataGet as $val) {
         .cuaca-area img{
             margin-top: 4px;
             margin-bottom: 15px;
-            width: 64px;
-            height: 64px;
+            width: 64px !important;
+            height: 64px !important;
             text-align: center;
             filter: drop-shadow(0px 0px 10px #fff);
             -webkit-filter: drop-shadow(0px 0px 10px #fff);
@@ -220,47 +227,41 @@ foreach ($dataGet as $val) {
         .simbol-arah.NNW{
             transform: rotate(135deg);
         }
+
+        .owl-carousel .owl-nav{
+            position: absolute;
+            width: 100%;
+            top: 36%;
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+        }
+        .owl-carousel .owl-nav button.owl-next,
+        .owl-carousel .owl-nav button.owl-prev,
+        .owl-carousel button.owl-dot{
+            color: #fff;
+            font-size: xxx-large;
+        }
     </style>
 </head>
 <body>
     <div class="container m-3">
-        <div class="row">
+        <div class="owl-carousel">
             <?php foreach ($data as $i => $val) { ?>
-                <div class="col mb-3">
-                    <div id="carousel<?=$i?>" class="carousel slide" data-bs-ride="carousel">
-                        <div class="carousel-inner">
-                            <?php foreach ($val['data'] as $ii => $value) { ?>
-                                <div class="carousel-item <?=$ii == 0 ? 'active' : ''?>">
-                                    <div class="card">
-                                        <div class="card-body d-flex flex-column align-items-center cuaca-area bg-<?=$value['pmAm']?>">
-                                            <span class="text-cuaca"><?=$val['namaKota']?></span>
-                                            <span class="text-cuaca my-2"><?=$value['time']?></span>
-                                            <img src="assets/<?=$value['cuaca']?>-<?=$value['pmAm']?>.png">
-                                            <span class="text-cuaca-info my-2"><?=$value['cuaca']?></span>
-                                            <span class="text-suhu mb-2"><i class="fa-solid fa-temperature-half"></i> <?=$value['suhu']?></span>
-                                            <span class="text-cuaca-info mb-2"><i class="fa-solid fa-droplet"></i> <?=$value['kelembabab']?></span>
-                                            <span class="text-cuaca-info mb-2"><i class="fa-solid fa-wind"></i> <?=$value['kecepatan']?></span>
-                                            <span class="text-cuaca-info mb-2"><i class="fa-solid fa-location-arrow simbol-arah <?=$value['simbolArah']?>"></i> <?=$value['arahAngin']?></span>
-                                        </div>
-                                    </div>
-                                </div>
-                            <?php } ?>
+                <?php foreach ($val['data'] as $ii => $value) { ?>
+                    <div class="card">
+                        <div class="card-body d-flex flex-column align-items-center cuaca-area bg-<?=$value['pmAm']?>">
+                            <span class="text-cuaca"><?=$val['namaKota']?></span>
+                            <span class="text-cuaca my-2"><?=$value['time']?></span>
+                            <img src="assets/<?=$value['cuaca']?>-<?=$value['pmAm']?>.png">
+                            <span class="text-cuaca-info my-2"><?=$value['cuaca']?></span>
+                            <span class="text-suhu mb-2"><i class="fa-solid fa-temperature-half"></i> <?=$value['suhu']?></span>
+                            <span class="text-cuaca-info mb-2"><i class="fa-solid fa-droplet"></i> <?=$value['kelembabab']?></span>
+                            <span class="text-cuaca-info mb-2"><i class="fa-solid fa-wind"></i> <?=$value['kecepatan']?></span>
+                            <span class="text-cuaca-info mb-2"><i class="fa-solid fa-location-arrow simbol-arah <?=$value['simbolArah']?>"></i> <?=$value['arahAngin']?></span>
                         </div>
-                        <button class="carousel-control-prev" type="button" data-bs-target="#carousel<?=$i?>" data-bs-slide="prev">
-                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                            <span class="visually-hidden">Previous</span>
-                        </button>
-                        <button class="carousel-control-next" type="button" data-bs-target="#carousel<?=$i?>" data-bs-slide="next">
-                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                            <span class="visually-hidden">Next</span>
-                        </button>
                     </div>
-                </div>
-                <?php 
-                    $x = $i+1;
-                    if ($x%5 == 0 ) { ?>
-                        <div class="w-100"></div>
-                    <?php }
+                <?php } 
                 }; ?>
         </div>
     </div>
@@ -268,5 +269,21 @@ foreach ($dataGet as $val) {
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js" integrity="sha512-yFjZbTYRCJodnuyGlsKamNE/LlEaEAxSUDe5+u61mV8zzqJVFOH7TnULE2/PP/l5vKWpUNnF4VGVkXh3MjgLsg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="assets/js/jquery.min.js"></script>
+    <script src="assets/owlcarousel/owl.carousel.min.js"></script>
+    <script>
+        $(document).ready(function(){
+            var owl = $('.owl-carousel');
+            owl.owlCarousel({
+                items:4,
+                loop:true,
+                margin:10,
+                autoplay:true,
+                autoplayTimeout:3000,
+                autoplayHoverPause:true,
+                nav:true,
+            });
+        });
+    </script>
 </body>
 </html>
